@@ -16,6 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignId('recipe_id');
             $table->integer('step_number');
+            $table->text('description');
         });
     }
 
