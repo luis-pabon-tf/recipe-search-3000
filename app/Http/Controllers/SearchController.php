@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\RecipeCollection;
 use Illuminate\Http\Request;
 use App\Models\Recipe;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,7 @@ class SearchController extends Controller
         $keyword = $request->input('keyword');
         $ingredient = $request->input('ingredient');
 
-        $query = Recipe::all();
+        $query = Recipe::query();
 
         if (!empty($email)) {
             // Author email - exact match
@@ -52,7 +53,6 @@ class SearchController extends Controller
             });
         }
 
-        // add resource?
-        return $query->get();
+        return new RecipeCollection($query->paginate());
     }
 }
