@@ -16,8 +16,20 @@ class IngredientFactory extends Factory
      */
     public function definition(): array
     {
+        switch (rand(1,3)) {
+            case 1:
+                $unit = 'gram';
+                break;
+            case 2:
+                $unit = 'tsp';
+                break;
+            default:
+                $unit = 'portion';
+        }
+
         return [
-            //
+            'name' => fake()->streetName(),
+            'unit_type' => $unit,
         ];
     }
 }

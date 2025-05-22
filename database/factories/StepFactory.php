@@ -17,7 +17,7 @@ class StepFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'description' => fake()->text(),
         ];
     }
 }
