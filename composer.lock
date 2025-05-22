@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aa322c53454393ed775cfe4807d54a50",
+    "content-hash": "5a96ad317f0f6549c4822f2efe53f28e",
     "packages": [
         {
             "name": "brick/math",
@@ -8061,6 +8061,61 @@
                 }
             ],
             "time": "2021-07-28T10:34:58+00:00"
+        },
+        {
+            "name": "walterwoshid/laravel-sail-for-windows",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/WalterWoshid/laravel-sail-for-windows.git",
+                "reference": "e912ba7459dc8f9ff41713b6662c89d29c9d35e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/WalterWoshid/laravel-sail-for-windows/zipball/e912ba7459dc8f9ff41713b6662c89d29c9d35e8",
+                "reference": "e912ba7459dc8f9ff41713b6662c89d29c9d35e8",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^9.52.16|^10.0|^11.0",
+                "laravel/sail": "^1.0",
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "WalterWoshid\\SailForWindows\\SailForWindowsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "WalterWoshid\\SailForWindows\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Walter Woshid",
+                    "email": "wotschel.valentin@googlemail.com"
+                }
+            ],
+            "description": "Windows (PowerShell) support for Laravel Sail on Windows.",
+            "keywords": [
+                "Powershell",
+                "laravel",
+                "sail",
+                "windows"
+            ],
+            "support": {
+                "issues": "https://github.com/WalterWoshid/laravel-sail-for-windows/issues",
+                "source": "https://github.com/WalterWoshid/laravel-sail-for-windows/tree/1.0.0"
+            },
+            "time": "2024-02-12T22:42:05+00:00"
         }
     ],
     "aliases": [],
@@ -8072,5 +8127,5 @@
         "php": "^8.1"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
