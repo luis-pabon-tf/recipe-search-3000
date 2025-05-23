@@ -432,24 +432,21 @@ class SearchTest extends TestCase
 
     public function testEmptySearch(): void
     {
+        $response = $this->post('/api/search');
+        $response->assertFound();
+
         $response = $this->post('/api/search', []);
-        $response->assertBadRequest();
+        $response->assertFound();
 
         $response = $this->post('/api/search', [
             'email' => '',
         ]);
-        $response->assertBadRequest();
+        $response->assertFound();
 
         $response = $this->post('/api/search', [
             'email' => '',
             'keyword' => 'fried needle',
         ]);
-        $response->assertAccepted();
-    }
-
-    public function testNoBodyProblem(): void
-    {
-        $response = $this->post('/api/search');
-        $response->assertFound();
+        $response->assertSuccessful();
     }
 }

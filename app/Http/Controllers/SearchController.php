@@ -14,17 +14,11 @@ class SearchController extends Controller
     {
         $validated = $request->validate([
             'email' => 'required_without_all:keyword,ingredient',
+            'keyword' => 'required_without_all:email,ingredient',
+            'ingredient' => 'required_without_all:email,keyword',
         ]);
 
-
-
-        // $validator = Validator::make($request->all(), [
-        //     'ids' => 'required_without_all:rental_company_id,camper_id,take_over_station_id, returnable_station_id'
-        //     ], [
-        //     'required_without_all' => 'One of the following Season,Rental companies,... must be present.'
-        //     ]);
-
-        if (!$validated) {
+        if (empty($validated)) {
             abort(400, 'A body with search parameters is required');
         }
 
@@ -69,9 +63,6 @@ class SearchController extends Controller
                     ->orWhere('name', 'LIKE', "%$ingredientPlural%");
             });
         }
-
-        // if (!empty($email) && !empty($keyword))
-        //     var_dump($query->dump());
 
         return new RecipeCollection($query->paginate(10));
     }
