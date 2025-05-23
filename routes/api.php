@@ -22,4 +22,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/search', SearchController::class);
 
-Route::get('/user/{slug}', [RecipeController::class, 'get']);
+Route::get('/recipe/{slug}', [RecipeController::class, 'show']);
