@@ -25,7 +25,7 @@ class RecipeFactory extends Factory
                 $name = 'Potatoes for ' . fake()->firstName();
                 break;
             default:
-                $name = 'Meat Dish';
+                $name = fake()->city() . 'Meat Dish';
         }
 
         return [
