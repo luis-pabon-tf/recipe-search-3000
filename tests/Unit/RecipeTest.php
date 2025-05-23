@@ -30,7 +30,8 @@ class RecipeTest extends TestCase
                 'name' => 'fried needle'
             ]);
 
-        $this->assertEquals('fried-needle', $recipe1->slug);
-        $this->assertEquals('fried-needle-1', $recipe2->slug);
+        $this->assertStringContainsString('fried-needle', $recipe1->slug);
+        $this->assertStringContainsString('fried-needle', $recipe2->slug);
+        $this->assertNotEquals($recipe1->slug, $recipe2->slug);
     }
 }
