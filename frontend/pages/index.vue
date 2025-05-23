@@ -62,8 +62,3 @@ async function handleFormSubmit() {
     </div>
     <NuxtLoadingIndicator />
 </template>
-
-'Name',
-'Description',
-'Author',
-'Details'
