@@ -13,9 +13,9 @@ const headers = [
 const { data, execute, status } = await useFetch('http://127.0.0.1:8888/api/search', {
     method: 'POST',
     body: {
-        'email': email,
-        'keyword': keyword,
-        'ingredient': ingredient
+        'email': email.value,
+        'keyword': keyword.value,
+        'ingredient': ingredient.value
     },
     immediate: false
 })
@@ -27,8 +27,13 @@ async function handleFormSubmit() {
 
 <template>
 <div>
-    <div>
-        <form @submit.prevent="handleFormSubmit">
+    <form @submit.prevent="handleFormSubmit">
+        <SearchInputs v-model:email="email" v-model:keyword="keyword" v-model:ingredient="ingredient"/>
+        <button type="submit">Search</button>
+    </form>
+    <!-- <SearchForm v-model="msg"></SearchForm> -->
+    <!-- <div> -->
+        <!-- <form @submit.prevent="handleFormSubmit">
             <label for="email">Author email:</label><br>
             <input v-model="email" placeholder="exact author email"><br>
 
@@ -39,8 +44,8 @@ async function handleFormSubmit() {
             <input v-model="ingredient" placeholder="partial ingredient match"><br>
 
             <button type="submit">Search</button>
-        </form>
-    </div>
+        </form> -->
+    <!-- </div> -->
 
     <div>
         <div v-if="status === 'idle'">
