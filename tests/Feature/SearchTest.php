@@ -36,7 +36,6 @@ class SearchTest extends TestCase
                 'name' => 'fried needle',
                 'description' => 'first of two',
             ]);
-
     }
 
     public function testVerifyStructure(): void
