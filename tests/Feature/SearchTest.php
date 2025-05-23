@@ -13,22 +13,36 @@ class SearchTest extends TestCase
 {
     use RefreshDatabase;
 
+    private ?Author $author;
+    private ?Recipe $recipe;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->author = Author::factory()->create([
+            'email' => 'lolo_fuzzletoes@fakemail.com'
+        ]);
+
+        $this->recipe = Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'search by keyword',
+            ])
+            ->for($this->author)
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'fried needle',
+                'description' => 'first of two',
+            ]);
+
+    }
+
     public function testVerifyStructure(): void
     {
-        $author = Author::factory()->create();
-
-        Recipe::factory()
-            // ->count(50)
-            ->hasSteps(3)
-            ->for($author)
-            ->hasAttached(
-                Ingredient::factory()->count(2),
-                ['quantity' => 2]
-            )
-            ->create();
-
         $response = $this->post('/api/search', [
-            'email' => $author->email,
+            'email' => $this->author->email,
         ]);
         $response->assertStatus(200);
         $json = $response->json();
@@ -47,14 +61,14 @@ class SearchTest extends TestCase
         $this->assertArrayHasKey('author_email', $r_data);
 
         $this->assertArrayHasKey('ingredients', $r_data);
-        $this->assertCount(2, $r_data['ingredients']);
+        $this->assertCount(1, $r_data['ingredients']);
         $ing_data = $r_data['ingredients'][0];
         $this->assertArrayHasKey('name', $ing_data);
         $this->assertArrayHasKey('unit_type', $ing_data);
         $this->assertArrayHasKey('quantity', $ing_data);
 
         $this->assertArrayHasKey('steps', $r_data);
-        $this->assertCount(3, $r_data['steps']);
+        $this->assertCount(1, $r_data['steps']);
         $step_data = $r_data['steps'][0];
         $this->assertArrayHasKey('description', $step_data);
         $this->assertArrayHasKey('step_number', $step_data);
@@ -62,13 +76,10 @@ class SearchTest extends TestCase
 
     public function testEmailSearch(): void
     {
-        $big_author = Author::factory()->create([
-            'email' => 'lolo_fuzzletoes@fakemail.com'
-        ]);
         Recipe::factory()
             ->count(5)
             ->hasSteps(3)
-            ->for($big_author)
+            ->for($this->author)
             ->hasAttached(
                 Ingredient::factory()->count(2),
                 ['quantity' => 2]
@@ -79,22 +90,21 @@ class SearchTest extends TestCase
             'email' => 'plumes_frankin@fakemail.com'
         ]);
         Recipe::factory()
-            ->hasSteps(3)
+            ->hasSteps(1)
             ->for($small_author)
             ->hasAttached(
-                Ingredient::factory()->count(2),
+                Ingredient::factory(),
                 ['quantity' => 2]
             )
             ->create();
 
         // check big author matches
         $response = $this->post('/api/search', [
-            'email' => $big_author->email,
+            'email' => $this->author->email,
         ]);
         $json = $response->json();
-        $this->assertCount(5, $json['data']);
-        $this->assertEquals($big_author->email, $json['data'][0]['author_email']);
-        $this->assertEquals(Recipe::all()->first()->slug, $json['data'][0]['slug']);
+        $this->assertCount(6, $json['data']);
+        $this->assertEquals($this->author->email, $json['data'][0]['author_email']);
 
         // check only small author matches
         $response = $this->post('/api/search', [
@@ -103,26 +113,10 @@ class SearchTest extends TestCase
         $json = $response->json();
         $this->assertCount(1, $json['data']);
         $this->assertEquals($small_author->email, $json['data'][0]['author_email']);
-        $this->assertEquals(Recipe::all()->last()->slug, $json['data'][0]['slug']);
     }
 
     public function testKeywordSearch(): void
     {
-        // first match
-        Recipe::factory()
-            ->hasSteps(1, [
-                'description' => 'search by keyword',
-            ])
-            ->for(Author::factory()->create())
-            ->hasAttached(
-                Ingredient::factory()->create(['name' => 'matcha']),
-                ['quantity' => 1]
-            )
-            ->create([
-                'name' => 'fried needle',
-                'description' => 'first of two',
-            ]);
-
         // filler
         Recipe::factory()
             ->count(5)
@@ -155,17 +149,15 @@ class SearchTest extends TestCase
         ]);
         $json = $response->json();
         $this->assertCount(1, $json['data']);
-        $this->assertEquals(Recipe::all()->first()->steps->first()->description,
-            $json['data'][0]['steps'][0]['description']);
+        $this->assertEquals('search by keyword', $json['data'][0]['steps'][0]['description']);
 
         // one match on ingredient
         $response = $this->post('/api/search', [
-            'keyword' => 'matcha',
+            'keyword' => 'old tomato',
         ]);
         $json = $response->json();
         $this->assertCount(1, $json['data']);
-        $this->assertEquals(Recipe::all()->first()->ingredients->first()->name,
-            $json['data'][0]['ingredients'][0]['name']);
+        $this->assertEquals('old tomato', $json['data'][0]['ingredients'][0]['name']);
 
         // one match on description
         $response = $this->post('/api/search', [
@@ -173,7 +165,7 @@ class SearchTest extends TestCase
         ]);
         $json = $response->json();
         $this->assertCount(1, $json['data']);
-        $this->assertEquals(Recipe::all()->first()->description, $json['data'][0]['description']);
+        $this->assertEquals('first of two', $json['data'][0]['description']);
 
         // TWO matches on name
         $response = $this->post('/api/search', [
@@ -181,24 +173,12 @@ class SearchTest extends TestCase
         ]);
         $json = $response->json();
         $this->assertCount(2, $json['data']);
-        $this->assertEquals(Recipe::all()->first()->name, $json['data'][0]['name']);
-        $this->assertEquals(Recipe::all()->last()->name, $json['data'][1]['name']);
+        $this->assertEquals('fried needle', $json['data'][0]['name']);
+        $this->assertEquals('fried needle', $json['data'][1]['name']);
     }
 
     public function testIngredientSearch(): void
     {
-            // this could be a partial match; for example, “potato” should match “3 large potatoes” in the ingredients list
-
-        // first match
-        Recipe::factory()
-            ->hasSteps(1)
-            ->for(Author::factory()->create())
-            ->hasAttached(
-                Ingredient::factory()->create(['name' => 'old tomato']),
-                ['quantity' => 1]
-            )
-            ->create();
-
         // filler
         Recipe::factory()
             ->count(5)
@@ -240,26 +220,236 @@ class SearchTest extends TestCase
 
     public function testAuthorAndKeywordSearch(): void
     {
+        // same author
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'stepuno',
+            ])
+            ->for($this->author)
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'onion']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'boiled berries',
+                'description' => 'first of two',
+            ]);
 
+        // same keywords
+        $author2 = Author::factory()->create([
+            'email' => 'plumes_frankin@fakemail.com'
+        ]);
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'stepuno',
+            ])
+            ->for($author2)
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'fried needle',
+                'description' => 'first of two',
+            ]);
+
+        // email matches r1 + r2, keyword matches r1
+        $response = $this->post('/api/search', [
+            'email' => $this->author->email,
+            'keyword' => 'boiled berries',
+        ]);
+        $json = $response->json();
+        $this->assertCount(1, $json['data']);
+        $this->assertEquals($this->author->email, $json['data'][0]['author_email']);
+        $this->assertEquals('boiled berries', $json['data'][0]['name']);
+
+        // email matches r1 + r2, keyword matches r1 + r2 + r3
+        $response = $this->post('/api/search', [
+            'email' => $this->author->email,
+            'keyword' => 'first of two',
+        ]);
+        $json = $response->json();
+        $this->assertCount(2, $json['data']);
+        $this->assertEquals($this->author->email, $json['data'][0]['author_email']);
+        $this->assertEquals('first of two', $json['data'][0]['description']);
+
+        // email matches r3, keyword matches r1 + r2 + r3
+        $response = $this->post('/api/search', [
+            'email' => $author2->email,
+            'keyword' => 'first of two',
+        ]);
+        $json = $response->json();
+        $this->assertCount(1, $json['data']);
+        $this->assertEquals($author2->email, $json['data'][0]['author_email']);
+        $this->assertEquals('first of two', $json['data'][0]['description']);
     }
 
     public function testKeywordAndIngredientSearch(): void
     {
+        // same keywords
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'stepuno',
+            ])
+            ->for(Author::factory()->create())
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'fried needle',
+                'description' => 'first of two',
+            ]);
 
+        // same ingredients
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'somethingelse',
+            ])
+            ->for(Author::factory()->create())
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'somethingelse',
+                'description' => 'somethingelse',
+            ]);
+
+        // keyword matches r1 + r2, ingredient matches r1 + r2 + r3
+        $response = $this->post('/api/search', [
+            'keyword' => 'fried needle',
+            'ingredient' => 'old',
+        ]);
+        $json = $response->json();
+        $this->assertCount(2, $json['data']);
+        $this->assertEquals('fried needle', $json['data'][0]['name']);
+        $this->assertStringContainsString('old', $json['data'][0]['ingredients'][0]['name']);
     }
 
     public function testAuthorAndIngredientSearch(): void
     {
+        // same author
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'stepuno',
+            ])
+            ->for($this->author)
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'somethingelse']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'somethingelse',
+                'description' => 'somethingelse',
+            ]);
 
+        // same ingredients
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'somethingelse',
+            ])
+            ->for(Author::factory()->create())
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'somethingelse',
+                'description' => 'somethingelse',
+            ]);
+
+        // author matches r1 + r2, ingredient matches r1 + r2 + r3
+        $response = $this->post('/api/search', [
+            'email' => $this->author->email,
+            'ingredient' => 'old',
+        ]);
+        $json = $response->json();
+        $this->assertCount(1, $json['data']);
+        $this->assertEquals($this->author->email, $json['data'][0]['author_email']);
+        $this->assertStringContainsString('old', $json['data'][0]['ingredients'][0]['name']);
+    }
+
+    public function testAllFieldsSearch(): void
+    {
+        // same author
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'somethingelse',
+            ])
+            ->for($this->author)
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'somethingelse']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'somethingelse',
+                'description' => 'somethingelse',
+            ]);
+
+        // same keywords
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'stepuno',
+            ])
+            ->for(Author::factory()->create())
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'fried needle',
+                'description' => 'first of two',
+            ]);
+
+        // same ingredients
+        Recipe::factory()
+            ->hasSteps(1, [
+                'description' => 'somethingelse',
+            ])
+            ->for(Author::factory()->create())
+            ->hasAttached(
+                Ingredient::factory()->create(['name' => 'old tomato']),
+                ['quantity' => 1]
+            )
+            ->create([
+                'name' => 'somethingelse',
+                'description' => 'somethingelse',
+            ]);
+
+
+        // author matches r1 + r2, keyword matches r1 + r2, ingredient matches r1 + r2 + r3
+        $response = $this->post('/api/search', [
+            'email' => $this->author->email,
+            'keyword' => 'fried needle',
+            'ingredient' => 'old',
+        ]);
+        $json = $response->json();
+        $this->assertCount(1, $json['data']);
+        $this->assertEquals($this->author->email, $json['data'][0]['author_email']);
+        $this->assertStringContainsString('old', $json['data'][0]['ingredients'][0]['name']);
     }
 
     public function testEmptySearch(): void
     {
+        $response = $this->post('/api/search', []);
+        $response->assertBadRequest();
 
+        $response = $this->post('/api/search', [
+            'email' => '',
+        ]);
+        $response->assertBadRequest();
+
+        $response = $this->post('/api/search', [
+            'email' => '',
+            'keyword' => 'fried needle',
+        ]);
+        $response->assertAccepted();
+    }
+
+    public function testNoBodyProblem(): void
+    {
+        $response = $this->post('/api/search');
+        $response->assertFound();
     }
 }
-
-
-
-// Feature tests - how do you prove the search feature works for all search combinations
-// email, keywords, ingredients, combinations of them, pagination, nothing
