@@ -53,6 +53,6 @@ class SearchController extends Controller
             });
         }
 
-        return new RecipeCollection($query->paginate());
+        return new RecipeCollection($query->paginate(10));
     }
 }
