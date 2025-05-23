@@ -43,7 +43,7 @@ class SearchController extends Controller
 
         if (!empty($ingredient)) {
             // this could be a partial match; for example, “potato” should match “3 large potatoes” in the ingredients list
-            $query = $query->whereHas('ingredient', function(Builder $query) use ($ingredient)
+            $query = $query->whereHas('ingredients', function(Builder $query) use ($ingredient)
             {
                 $ingredientSingular = Str::singular($ingredient);
                 $ingredientPlural = Str::plural($ingredient);
