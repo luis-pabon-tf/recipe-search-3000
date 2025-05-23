@@ -19,6 +19,10 @@ defineProps([
                     <slot :name="`column${i}`" :entry="entry"></slot>
                 </td>
             </tr>
+            <div v-if="rows.links !== 'undefined'" class="paginator">
+                <button :disabled="rows.links.prev == null" @click="$emit('changePage', rows.links.prev)">Previous</button>
+                <button :disabled="rows.links.next == null" @click="$emit('changePage', rows.links.next)">Next</button>
+            </div>
         </table>
     </div>
 </template>

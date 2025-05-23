@@ -3,6 +3,7 @@
 const email = ref('')
 const keyword = ref('')
 const ingredient = ref('')
+let searchPage = 'http://127.0.0.1:8888/api/search'
 
 const headers = [
     'Name',
@@ -10,15 +11,20 @@ const headers = [
     'Details'
 ]
 
-const { data, execute, status } = await useFetch('http://127.0.0.1:8888/api/search', {
+const { data, execute, error, status } = await useFetch(searchPage, {
     method: 'POST',
     body: {
-        'email': email.value,
-        'keyword': keyword.value,
-        'ingredient': ingredient.value
+        'email': email,
+        'keyword': keyword,
+        'ingredient': ingredient
     },
     immediate: false
 })
+
+function paginate(link: string) {
+    searchPage = link
+    handleFormSubmit()
+}
 
 async function handleFormSubmit() {
     execute()
@@ -27,13 +33,10 @@ async function handleFormSubmit() {
 
 <template>
 <div>
-    <form @submit.prevent="handleFormSubmit">
-        <SearchInputs v-model:email="email" v-model:keyword="keyword" v-model:ingredient="ingredient"/>
-        <button type="submit">Search</button>
-    </form>
-    <!-- <SearchForm v-model="msg"></SearchForm> -->
-    <!-- <div> -->
-        <!-- <form @submit.prevent="handleFormSubmit">
+    <h1>Search Form</h1>
+
+    <div>
+        <form @submit.prevent="handleFormSubmit">
             <label for="email">Author email:</label><br>
             <input v-model="email" placeholder="exact author email"><br>
 
@@ -44,8 +47,8 @@ async function handleFormSubmit() {
             <input v-model="ingredient" placeholder="partial ingredient match"><br>
 
             <button type="submit">Search</button>
-        </form> -->
-    <!-- </div> -->
+        </form>
+    </div>
 
     <div>
         <div v-if="status === 'idle'">
@@ -54,9 +57,11 @@ async function handleFormSubmit() {
         <div v-else-if="status === 'pending'">
             Loading recipes...
         </div>
+        <div v-else-if="status === 'error'">
+            {{ error }}
+        </div>
         <div v-else>
-            <!-- {{ data }} -->
-            <SimpleTable :headers="headers" :rows="data">
+            <SimpleTable :headers="headers" :rows="data" @change-page="paginate">
                 <template #column0="{ entry }">
                 {{ entry.name }}
                 </template>

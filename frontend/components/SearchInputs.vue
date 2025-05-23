@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 const email = defineModel('email')
 const keyword = defineModel('keyword')
 const ingredient = defineModel('ingredient')
