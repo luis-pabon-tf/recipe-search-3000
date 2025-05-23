@@ -13,17 +13,30 @@ class Recipe extends Model
 {
     use HasFactory;
 
-     protected static function booted(): void
-     {
+    protected static function booted(): void
+    {
         // generate slug during creation
          static::creating(function (Recipe $recipe) {
-            // in real use slug should be made unique
-            $recipe->slug = Str::slug($recipe->name);
+            if (empty($recipe->slug)) {
+                $recipe->generateSlug();
+            }
          });
 
      }
 
-    public function steps():HasMany
+    public function generateSlug(): string
+    {
+        // append a number when the slug name is very similar
+        $slug = Str::slug($this->name);
+        $matchCount = Recipe::where('slug', 'like', $slug . '%')->count();
+
+        if ($matchCount > 0) {
+            $slug .= '-' . $matchCount;
+        }
+        return $slug;
+    }
+
+    public function steps(): HasMany
     {
         return $this->hasMany(Step::class);
     }
