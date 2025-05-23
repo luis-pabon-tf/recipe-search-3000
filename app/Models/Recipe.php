@@ -38,7 +38,7 @@ class Recipe extends Model
 
     public function steps(): HasMany
     {
-        return $this->hasMany(Step::class);
+        return $this->hasMany(Step::class)->orderBy('id'); // @todo order override with step_number
     }
 
     public function author(): BelongsTo
