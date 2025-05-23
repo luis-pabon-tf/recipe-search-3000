@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
+use App\Models\Recipe;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Recipe>
@@ -25,13 +25,20 @@ class RecipeFactory extends Factory
                 $name = 'Potatoes for ' . fake()->firstName();
                 break;
             default:
-                $name = 'Meat';
+                $name = 'Meat Dish';
         }
 
         return [
             'name' => $name,
             'description' => fake()->text(),
-            'slug' => Str::slug($name),
         ];
+    }
+
+    public function configure(): static
+    {
+        // mass assignment constraint workaround for tests
+        return $this->afterMaking(function (Recipe $recipe) {
+            $recipe->slug = $recipe->generateSlug();
+        });
     }
 }
