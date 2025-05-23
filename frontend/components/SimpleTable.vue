@@ -1,9 +1,9 @@
 <!-- original vue version by @lizzieturney -->
 <script setup lang="ts">
-defineProps({
-    headers: Array,
-    data: Object
-})
+defineProps([
+    'headers',
+    'rows'
+])
 </script>
 
 <template>
@@ -14,7 +14,7 @@ defineProps({
                     {{ header }}
                 </th>
             </tr>
-            <tr v-for="entry in data" :key="`entity-${entry.id}`" class="table-rows">
+            <tr v-for="entry in rows.data" :key="`entity-${entry.id}`" class="table-rows">
                 <td v-for="(header, i) in headers" :key="`${header}-${i}`">
                     <slot :name="`column${i}`" :entry="entry"></slot>
                 </td>

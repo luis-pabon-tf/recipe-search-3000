@@ -1,29 +1,32 @@
 <script setup lang="ts">
-const email = ""
-const keyword = ""
-const ingredient = ""
+
+const email = ref('')
+const keyword = ref('')
+const ingredient = ref('')
 
 const headers = [
     'Name',
     'Description',
-    'Author',
     'Details'
 ]
 
-let res: any = null
-async function handleFormSubmit() {
-  res = await useFetch('http://127.0.0.1:8888/api/search', {
+const { data, execute, status } = await useFetch('http://127.0.0.1:8888/api/search', {
     method: 'POST',
     body: {
         'email': email,
         'keyword': keyword,
         'ingredient': ingredient
-    }
-  })
+    },
+    immediate: false
+})
+
+async function handleFormSubmit() {
+    execute()
 }
 </script>
 
 <template>
+<div>
     <div>
         <form @submit.prevent="handleFormSubmit">
             <label for="email">Author email:</label><br>
@@ -40,11 +43,15 @@ async function handleFormSubmit() {
     </div>
 
     <div>
-        <div v-if="res == null">
-            Do a search
+        <div v-if="status === 'idle'">
+            No data
+        </div>
+        <div v-else-if="status === 'pending'">
+            Loading recipes...
         </div>
         <div v-else>
-            <SimpleTable :headers="headers" :data="res.data">
+            <!-- {{ data }} -->
+            <SimpleTable :headers="headers" :rows="data">
                 <template #column0="{ entry }">
                 {{ entry.name }}
                 </template>
@@ -52,13 +59,11 @@ async function handleFormSubmit() {
                 {{ entry.description }}
                 </template>
                 <template #column2="{ entry }">
-                {{ entry.email }}
-                </template>
-                <template #column3="{ entry }">
                     <NuxtLink :to="'/recipe/' + entry.slug">View more</NuxtLink>
                 </template>
             </SimpleTable>
         </div>
     </div>
     <NuxtLoadingIndicator />
+</div>
 </template>
